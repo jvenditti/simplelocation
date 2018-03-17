@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
 
-            val sub1 = locationService.getLocationObserver()
+            val sub1 = locationService.getLocation()
                     .subscribe({
                         Log.wtf("TEST", "${it.latitude}, ${it.longitude}")
                     }, {
@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
                         it.printStackTrace()
                     })
 
-            sub1.dispose()
             Completable.timer(5, TimeUnit.SECONDS)
                     .subscribe {
                         Log.wtf("TEST##%#$", "Stop TEST2")

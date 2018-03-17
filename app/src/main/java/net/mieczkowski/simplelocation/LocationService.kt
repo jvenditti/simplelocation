@@ -55,19 +55,7 @@ class LocationService {
         return this
     }
 
-    fun getLastLocation(): Single<Location>{
-        return if (ContextCompat.checkSelfPermission(locationClient.applicationContext,
-                        Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            Single.error(Throwable("Missing Fine Location Permission"))
-
-        }else{
-            Single.create<Location>{ emitter ->
-                locationClient.lastLocation.addOnSuccessListener { emitter.onSuccess(it) }
-                        .addOnFailureListener { emitter.onError(it) }
-            }.subscribeOn(Schedulers.io())
-        }
-    }
+    fun getLocation(): Single<Location> = getLocationObserver().take(1).toList().map { it[0] }
 
     fun getLocationObserver(): Observable<Location>{
         return if (ContextCompat.checkSelfPermission(locationClient.applicationContext,
