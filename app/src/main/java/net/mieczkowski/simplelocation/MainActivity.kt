@@ -8,6 +8,8 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import com.google.android.gms.location.LocationRequest
+import io.reactivex.Completable
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,16 +26,31 @@ class MainActivity : AppCompatActivity() {
                     2060)
         }else{
             LocationService.init(this)
-            LocationService().configureLocationSettings {
+            val locationService = LocationService().configureLocationSettings {
                 interval = 10000
                 fastestInterval = 5000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            }.getLocationObserver()
+            }
+
+            val sub1 = locationService.getLocationObserver()
                     .subscribe({
                         Log.wtf("TEST", "${it.latitude}, ${it.longitude}")
                     }, {
                         it.printStackTrace()
                     })
+
+            val sub2 = locationService.getLocationObserver()
+                    .subscribe({
+                        Log.wtf("TEST2", "${it.latitude}, ${it.longitude}")
+                    }, {
+                        it.printStackTrace()
+                    })
+
+            Completable.timer(5, TimeUnit.SECONDS)
+                    .subscribe {
+                        Log.wtf("TEST##%#$", "Stop TEST2")
+                        sub2.dispose()
+                    }
         }
 
     }

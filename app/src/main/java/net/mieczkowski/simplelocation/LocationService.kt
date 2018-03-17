@@ -32,7 +32,11 @@ class LocationService {
     }
 
     private var locationSubject: PublishSubject<Location> = PublishSubject.create()
-    private var locationRequest = LocationRequest()
+    private var locationRequest = LocationRequest().apply {
+        interval = 10000
+        fastestInterval = 5000
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    }
 
     private var locationCallBack: LocationCallback = object : LocationCallback(){
         override fun onLocationResult(locationResult: LocationResult?) {
@@ -44,7 +48,6 @@ class LocationService {
     }
 
     fun configureLocationSettings(settings: LocationRequest.() -> Unit): LocationService{
-        locationRequest = LocationRequest()
         settings(locationRequest)
 
         return this
