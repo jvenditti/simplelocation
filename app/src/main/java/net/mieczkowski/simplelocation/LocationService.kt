@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import com.google.android.gms.location.*
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
@@ -31,6 +32,7 @@ class LocationService {
         }
     }
 
+    private var obsCount = 0
     private var locationSubject: PublishSubject<Location> = PublishSubject.create()
     private var locationRequest = LocationRequest().apply {
         interval = 10000
@@ -74,12 +76,19 @@ class LocationService {
             Observable.error(Throwable("Missing Fine Location Permission"))
 
         }else{
-
             locationSubject.subscribeOn(Schedulers.io())
                     .doOnSubscribe {
-                        locationClient.requestLocationUpdates(locationRequest, locationCallBack, null)
+                        obsCount++
+
+                        if(!locationSubject.hasObservers())
+                            locationClient.requestLocationUpdates(locationRequest, locationCallBack, null)
                     }
-                    .doOnTerminate { locationClient.removeLocationUpdates(locationCallBack) }
+                    .doOnDispose {
+                        obsCount--
+
+                        if(obsCount == 0)
+                            locationClient.removeLocationUpdates(locationCallBack)
+                    }
         }
     }
 

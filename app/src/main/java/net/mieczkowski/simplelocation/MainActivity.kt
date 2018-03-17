@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
                         it.printStackTrace()
                     })
 
+            sub1.dispose()
             Completable.timer(5, TimeUnit.SECONDS)
                     .subscribe {
                         Log.wtf("TEST##%#$", "Stop TEST2")
