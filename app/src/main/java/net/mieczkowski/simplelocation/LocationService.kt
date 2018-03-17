@@ -78,10 +78,10 @@ class LocationService {
         }else{
             locationSubject.subscribeOn(Schedulers.io())
                     .doOnSubscribe {
-                        obsCount++
-
-                        if(!locationSubject.hasObservers())
+                        if(obsCount == 0)
                             locationClient.requestLocationUpdates(locationRequest, locationCallBack, null)
+
+                        obsCount++
                     }
                     .doOnDispose {
                         obsCount--
