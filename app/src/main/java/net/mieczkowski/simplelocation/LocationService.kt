@@ -61,7 +61,7 @@ class LocationService {
         return if (ContextCompat.checkSelfPermission(locationClient.applicationContext,
                         Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            Observable.error(Throwable("Missing Fine Location Permission"))
+            Observable.error(MissingFineLocationError())
 
         }else{
             locationSubject.subscribeOn(Schedulers.io())

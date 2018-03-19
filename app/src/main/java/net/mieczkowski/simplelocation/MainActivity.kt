@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity() {
         }else{
             LocationService.init(this)
             val locationService = LocationService().configureLocationSettings {
-                interval = 10000
-                fastestInterval = 5000
+                interval = 5000
+                fastestInterval = 1000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
 
@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
                     }, {
                         it.printStackTrace()
                     })
+
+            sub1.dispose()
 
             Completable.timer(5, TimeUnit.SECONDS)
                     .subscribe {
