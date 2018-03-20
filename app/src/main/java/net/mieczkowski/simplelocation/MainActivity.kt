@@ -10,6 +10,8 @@ import android.util.Log
 import com.google.android.gms.location.LocationRequest
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -57,7 +59,9 @@ class MainActivity : AppCompatActivity() {
             subscriber.add(it.getLocationObserver()
                     .subscribe({
                         Log.d(TAG, "--- subscriber: ${it.latitude}, ${it.longitude}")
-                        textView.text = ("latitude: ${it.latitude} | longitude: ${it.longitude}")
+                        val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.US)
+                        val date = Date()
+                        textView.text = ("${dateFormat.format(date)}\nlatitude: ${it.latitude} | longitude: ${it.longitude}")
                     }, {
                         it.printStackTrace()
                     }))
@@ -80,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         }
         */
         subscriber.clear()
-        textView.text = ("cleared")
+        textView.text = getString(R.string.cleared_text)
     }
 
     override fun onDestroy() {

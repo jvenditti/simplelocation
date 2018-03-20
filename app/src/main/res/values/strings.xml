@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Simple Location Test</string>
+    <string name="cleared_text">Cleared onPause()</string>
 </resources>
