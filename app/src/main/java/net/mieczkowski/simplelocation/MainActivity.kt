@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.google.android.gms.location.LocationRequest
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,9 +34,12 @@ class MainActivity : AppCompatActivity() {
 
         } else {
 
-            LocationService.init(this)
+            /**
+             * Using "applicationContext" to prevent memory leak from Google class
+             */
+            LocationService.init(applicationContext)
             service = LocationService().configureLocationSettings {
-                interval = 5000
+                interval = 2500
                 fastestInterval = 1000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
@@ -53,6 +57,7 @@ class MainActivity : AppCompatActivity() {
             subscriber.add(it.getLocationObserver()
                     .subscribe({
                         Log.d(TAG, "--- subscriber: ${it.latitude}, ${it.longitude}")
+                        textView.text = ("latitude: ${it.latitude} | longitude: ${it.longitude}")
                     }, {
                         it.printStackTrace()
                     }))
@@ -75,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         }
         */
         subscriber.clear()
+        textView.text = ("cleared")
     }
 
     override fun onDestroy() {
