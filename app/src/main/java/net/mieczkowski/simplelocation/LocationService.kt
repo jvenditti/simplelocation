@@ -24,10 +24,8 @@ import io.reactivex.subjects.PublishSubject
 class LocationService {
 
     companion object {
-
         private lateinit var locationClient: FusedLocationProviderClient
-
-        fun init(context: Context){
+        fun init(context: Context) {
             locationClient = LocationServices.getFusedLocationProviderClient(context)
         }
     }
@@ -40,7 +38,7 @@ class LocationService {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
     }
 
-    private var locationCallBack: LocationCallback = object : LocationCallback(){
+    private var locationCallBack: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             locationResult ?: return
             locationResult.locations.forEach {
@@ -49,36 +47,33 @@ class LocationService {
         }
     }
 
-    fun configureLocationSettings(settings: LocationRequest.() -> Unit): LocationService{
+    fun configureLocationSettings(settings: LocationRequest.() -> Unit): LocationService {
         settings(locationRequest)
-
         return this
     }
 
     fun getLocation(): Single<Location> = getLocationObserver().take(1).toList().map { it[0] }
 
-    fun getLocationObserver(): Observable<Location>{
-        return if (ContextCompat.checkSelfPermission(locationClient.applicationContext,
-                        Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+    fun getLocationObserver(): Observable<Location> {
+
+        return if (ContextCompat.checkSelfPermission(locationClient.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
             Observable.error(MissingFineLocationError())
 
-        }else{
+        } else {
             locationSubject.subscribeOn(Schedulers.io())
                     .doOnSubscribe {
-                        if(obsCount == 0)
+                        if (obsCount == 0) {
                             locationClient.requestLocationUpdates(locationRequest, locationCallBack, null)
-
+                        }
                         obsCount++
                     }
                     .doOnDispose {
                         obsCount--
-
-                        if(obsCount == 0)
+                        if (obsCount == 0) {
                             locationClient.removeLocationUpdates(locationCallBack)
+                        }
                     }
         }
     }
-
-
 }

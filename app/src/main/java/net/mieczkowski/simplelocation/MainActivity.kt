@@ -2,29 +2,35 @@ package net.mieczkowski.simplelocation
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.google.android.gms.location.LocationRequest
-import io.reactivex.Completable
-import java.util.concurrent.TimeUnit
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 
 class MainActivity : AppCompatActivity() {
 
+    val TAG = "MainActivity"
+
+    lateinit var subscriber1: Disposable
+    val subscriber2: CompositeDisposable = CompositeDisposable()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        Log.d(TAG, "onCreate")
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.READ_CONTACTS),
-                    2060)
-        }else{
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), 2060)
+
+        } else {
+
             LocationService.init(this)
             val locationService = LocationService().configureLocationSettings {
                 interval = 5000
@@ -32,28 +38,48 @@ class MainActivity : AppCompatActivity() {
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
 
-            val sub1 = locationService.getLocation()
+            // Gets a single location event
+            // NOTE: Singles are auto dispose (so you don't need to make the dispose call)
+            subscriber1 = locationService.getLocation()
                     .subscribe({
-                        Log.wtf("TEST", "${it.latitude}, ${it.longitude}")
+                        Log.d(TAG, "--- subscriber1: ${it.latitude}, ${it.longitude}")
                     }, {
                         it.printStackTrace()
                     })
 
-            val sub2 = locationService.getLocationObserver()
+            // Gets a location observable, where all location updates can be listened to
+            subscriber2.add(locationService.getLocationObserver()
                     .subscribe({
-                        Log.wtf("TEST2", "${it.latitude}, ${it.longitude}")
+                        Log.d(TAG, "--- subscriber2: ${it.latitude}, ${it.longitude}")
                     }, {
                         it.printStackTrace()
-                    })
+                    }))
 
-            sub1.dispose()
-
+            /*
             Completable.timer(5, TimeUnit.SECONDS)
                     .subscribe {
-                        Log.wtf("TEST##%#$", "Stop TEST2")
-                        sub2.dispose()
+                        Log.d(TAG, "--- dispose subscriber2")
+                        subscriber2.dispose()
                     }
+                    */
         }
+    }
 
+    // TODO: Leverage start/pause
+
+    override fun onDestroy() {
+        Log.d(TAG, "onDestroy")
+        super.onDestroy()
+        /*
+        // Don't need to do this because you're getting a Single back $$$$$$
+        if (!subscriber1.isDisposed) {
+            Log.d(TAG, "--- dispose subscriber1")
+            subscriber1.dispose()
+        }
+        */
+        if (!subscriber2.isDisposed) {
+            Log.d(TAG, "--- dispose subscriber2")
+            subscriber2.dispose()
+        }
     }
 }
