@@ -9,15 +9,17 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.google.android.gms.location.LocationRequest
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 
 class MainActivity : AppCompatActivity() {
 
-    val TAG = "MainActivity"
+    private val TAG = "MainActivity"
 
-    lateinit var subscriber1: Disposable
-    val subscriber2: CompositeDisposable = CompositeDisposable()
+    private val subscriber: CompositeDisposable = CompositeDisposable()
+    private var service: LocationService? = null
 
+    /**
+     * Make sure you have granted the necessary location permission in Settings.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
 
         Log.d(TAG, "onCreate")
@@ -32,54 +34,51 @@ class MainActivity : AppCompatActivity() {
         } else {
 
             LocationService.init(this)
-            val locationService = LocationService().configureLocationSettings {
+            service = LocationService().configureLocationSettings {
                 interval = 5000
                 fastestInterval = 1000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
-
-            // Gets a single location event
-            // NOTE: Singles are auto dispose (so you don't need to make the dispose call)
-            subscriber1 = locationService.getLocation()
-                    .subscribe({
-                        Log.d(TAG, "--- subscriber1: ${it.latitude}, ${it.longitude}")
-                    }, {
-                        it.printStackTrace()
-                    })
-
-            // Gets a location observable, where all location updates can be listened to
-            subscriber2.add(locationService.getLocationObserver()
-                    .subscribe({
-                        Log.d(TAG, "--- subscriber2: ${it.latitude}, ${it.longitude}")
-                    }, {
-                        it.printStackTrace()
-                    }))
-
-            /*
-            Completable.timer(5, TimeUnit.SECONDS)
-                    .subscribe {
-                        Log.d(TAG, "--- dispose subscriber2")
-                        subscriber2.dispose()
-                    }
-                    */
         }
     }
 
-    // TODO: Leverage start/pause
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        super.onResume()
+        /**
+         * Listen for all location updates using the "getLocationObserver()". If you only want to
+         * get the location once, use the "getLocation()" call.
+         */
+        service?.let {
+            subscriber.add(it.getLocationObserver()
+                    .subscribe({
+                        Log.d(TAG, "--- subscriber: ${it.latitude}, ${it.longitude}")
+                    }, {
+                        it.printStackTrace()
+                    }))
+        }
+    }
+
+    override fun onPause() {
+        Log.d(TAG, "onPause")
+        super.onPause()
+        Log.d(TAG, "--- clear subscriber")
+        /**
+         * Because we're adding to the CompositeDisposable on resume, we need to "clear()" the
+         * disposable instead of using "dispose()". Clear clears the container, then disposes all
+         * the previously contained disposables. Dispose clears the container and sets "isDisposed"
+         * to true so it will not accept any new disposables.
+         */
+        /*
+        if (!subscriber.isDisposed) {
+            subscriber.dispose()
+        }
+        */
+        subscriber.clear()
+    }
 
     override fun onDestroy() {
         Log.d(TAG, "onDestroy")
         super.onDestroy()
-        /*
-        // Don't need to do this because you're getting a Single back $$$$$$
-        if (!subscriber1.isDisposed) {
-            Log.d(TAG, "--- dispose subscriber1")
-            subscriber1.dispose()
-        }
-        */
-        if (!subscriber2.isDisposed) {
-            Log.d(TAG, "--- dispose subscriber2")
-            subscriber2.dispose()
-        }
     }
 }
